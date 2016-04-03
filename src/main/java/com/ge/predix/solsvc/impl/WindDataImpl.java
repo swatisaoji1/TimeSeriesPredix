@@ -183,73 +183,72 @@ public class WindDataImpl implements WindDataAPI {
 		return datapointsQuery;
 	}
 
+	private double getEvaporationRate(){
+		//TODO call weather api to get the evaporation rate and
+		//calculate evaporation per 10 minutes
+		return 1.1;
+	}
+	
+	
+	
 	@SuppressWarnings({ "nls", "unchecked" })
 	private void createMetrics() {
-		for (int i = 0; i < 10; i++) {
-			DatapointsIngestion dpIngestion = new DatapointsIngestion();
-			dpIngestion
-					.setMessageId(String.valueOf(System.currentTimeMillis()));
+		while(true){
+			int loopcount = 0;
+			double moisture = 100;
+			double evaporationRate = getEvaporationRate();
+			while(moisture > 20){
+				DatapointsIngestion dpIngestion = new DatapointsIngestion();
+				dpIngestion
+				.setMessageId(String.valueOf(System.currentTimeMillis()));
+				Body body = new Body();
+				body.setName("Soil-Moisture");
+				
+				List<Object> datapoint1 = new ArrayList<Object>();
+				datapoint1.add(generateTimestampsWithinYear(System
+						.currentTimeMillis()));
+				datapoint1.add(moisture);
+				datapoint1.add(1); // quality
+				
+				
+				List<Object> datapoint2 = new ArrayList<Object>();
+				datapoint2.add(generateTimestampsWithinYear(System
+						.currentTimeMillis()));
+				datapoint2.add(9);
+				datapoint2.add(2); // quality
 
-			Body body = new Body();
-			body.setName("Compressor-2015:CompressionRatio"); //$NON-NLS-1$
-			List<Object> datapoint1 = new ArrayList<Object>();
-			datapoint1.add(generateTimestampsWithinYear(System
-					.currentTimeMillis()));
-			datapoint1.add(10);
-			datapoint1.add(3); // quality
+				List<Object> datapoint3 = new ArrayList<Object>();
+				datapoint3.add(generateTimestampsWithinYear(System
+						.currentTimeMillis()));
+				datapoint3.add(27);
+				datapoint3.add(3); // quality
+				
+				List<Object> datapoints = new ArrayList<Object>();
+				datapoints.add(datapoint1);
+				datapoints.add(datapoint2);
+				datapoints.add(datapoint3);
+				
+				body.setDatapoints(datapoints);
+				List<Body> bodies = new ArrayList<Body>();
+				bodies.add(body);
 
-			List<Object> datapoint2 = new ArrayList<Object>();
-			datapoint2.add(generateTimestampsWithinYear(System
-					.currentTimeMillis()));
-			datapoint2.add(9);
-			datapoint2.add(1); // quality
-
-			List<Object> datapoint3 = new ArrayList<Object>();
-			datapoint3.add(generateTimestampsWithinYear(System
-					.currentTimeMillis()));
-			datapoint3.add(27);
-			datapoint3.add(0); // quality
-
-			List<Object> datapoint4 = new ArrayList<Object>();
-			datapoint4.add(generateTimestampsWithinYear(System
-					.currentTimeMillis()));
-			datapoint4.add(78);
-			datapoint4.add(2); // quality
-
-			List<Object> datapoint5 = new ArrayList<Object>();
-			datapoint5.add(generateTimestampsWithinYear(System
-					.currentTimeMillis()));
-			datapoint5.add(2);
-			datapoint5.add(3); // quality
-
-			List<Object> datapoint6 = new ArrayList<Object>();
-			datapoint6.add(generateTimestampsWithinYear(System
-					.currentTimeMillis()));
-			datapoint6.add(98);
-			datapoint6.add(1); // quality
-
-			List<Object> datapoints = new ArrayList<Object>();
-			datapoints.add(datapoint1);
-			datapoints.add(datapoint2);
-			datapoints.add(datapoint3);
-			datapoints.add(datapoint4);
-			datapoints.add(datapoint5);
-			datapoints.add(datapoint6);
-
-			body.setDatapoints(datapoints);
-
-			com.ge.dsp.pm.ext.entity.util.map.Map map = new com.ge.dsp.pm.ext.entity.util.map.Map();
-			map.put("host", "server1"); //$NON-NLS-2$
-			map.put("customer", "Acme"); //$NON-NLS-2$
-
-			body.setAttributes(map);
-
-			List<Body> bodies = new ArrayList<Body>();
-			bodies.add(body);
-
-			dpIngestion.setBody(bodies);
-			this.timeseriesFactory.create(dpIngestion);
-		}
+				dpIngestion.setBody(bodies);
+				this.timeseriesFactory.create(dpIngestion);
+				
+				// sleep for 10 minutes
+				try {
+					Thread.sleep(1000*10);
+					log.debug("sleeping for 10 secs ***********" + moisture);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				// decrement the moisture
+				moisture = moisture - evaporationRate;
+			}// end of inner loop one sprinkler cycle
+			loopcount++;
+			log.debug("loopcount: " + loopcount);
+		}// endless loop
 	}
 
 	@SuppressWarnings("javadoc")
