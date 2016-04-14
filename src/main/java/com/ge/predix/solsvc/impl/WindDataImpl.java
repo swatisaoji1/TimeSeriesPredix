@@ -197,47 +197,26 @@ public class WindDataImpl implements WindDataAPI {
 			int loopcount = 0;
 			double moisture = 100;
 			double evaporationRate = getEvaporationRate();
+			
+			// decrement moisture level 
 			while(moisture > 20){
 				DatapointsIngestion dpIngestion = new DatapointsIngestion();
 				dpIngestion
 				.setMessageId(String.valueOf(System.currentTimeMillis()));
-				Body body = new Body();
-				body.setName("Soil-Moisture");
-				
-				List<Object> datapoint1 = new ArrayList<Object>();
-				datapoint1.add(generateTimestampsWithinYear(System
-						.currentTimeMillis()));
-				datapoint1.add(moisture);
-				datapoint1.add(1); // quality
-				
-				
-				List<Object> datapoint2 = new ArrayList<Object>();
-				datapoint2.add(generateTimestampsWithinYear(System
-						.currentTimeMillis()));
-				datapoint2.add(9);
-				datapoint2.add(2); // quality
-
-				List<Object> datapoint3 = new ArrayList<Object>();
-				datapoint3.add(generateTimestampsWithinYear(System
-						.currentTimeMillis()));
-				datapoint3.add(27);
-				datapoint3.add(3); // quality
-				
-				List<Object> datapoints = new ArrayList<Object>();
-				datapoints.add(datapoint1);
-				datapoints.add(datapoint2);
-				datapoints.add(datapoint3);
-				
-				body.setDatapoints(datapoints);
+							
 				List<Body> bodies = new ArrayList<Body>();
-				bodies.add(body);
-
+			    bodies.add(getDataPoints("Cox-Statidium", moisture));
+			    bodies.add(getDataPoints("West-Campus-Green", moisture));
+			    bodies.add(getDataPoints("Malony-Field-CS3000", moisture));
+			    bodies.add(getDataPoints("Malony-Field-ET2000e", moisture));
+				
+			   
 				dpIngestion.setBody(bodies);
 				this.timeseriesFactory.create(dpIngestion);
 				
 				// sleep for 10 minutes
 				try {
-					Thread.sleep(1000*10);
+					Thread.sleep(1000* 60 * 10);
 					log.debug("sleeping for 10 secs ***********" + moisture);
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
@@ -248,9 +227,69 @@ public class WindDataImpl implements WindDataAPI {
 			}// end of inner loop one sprinkler cycle
 			loopcount++;
 			log.debug("loopcount: " + loopcount);
+			// TODO : trigger sprinkler
+			
+			// increment moisture
+			while(moisture <= 100){
+				DatapointsIngestion dpIngestion = new DatapointsIngestion();
+				dpIngestion
+				.setMessageId(String.valueOf(System.currentTimeMillis()));
+							
+				List<Body> bodies = new ArrayList<Body>();
+			    bodies.add(getDataPoints("Cox-Statidium", moisture));
+			    bodies.add(getDataPoints("West-Campus-Green", moisture));
+			    bodies.add(getDataPoints("Malony-Field-CS3000", moisture));
+			    bodies.add(getDataPoints("Malony-Field-ET2000e", moisture));
+				
+			   
+				dpIngestion.setBody(bodies);
+				this.timeseriesFactory.create(dpIngestion);
+				moisture += 4;
+				
+				// sleep for 1 minute
+				try {
+					Thread.sleep(1000 * 60);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			} // inner while loop
+			
 		}// endless loop
 	}
 
+	// create data to be inserted in timeSeries 
+	private Body getDataPoints(String type,double moisture){
+		Body body = new Body();
+		body.setName("Soil-Moisture");
+		long timestamp = System.currentTimeMillis();
+		List<Object> datapoint1 = new ArrayList<Object>();
+		datapoint1.add(timestamp);
+		datapoint1.add(moisture);
+		datapoint1.add(2); // quality
+		
+		List<Object> datapoint2 = new ArrayList<Object>();
+		datapoint2.add(timestamp);
+		datapoint2.add(moisture);
+		datapoint2.add(3); // quality
+        
+		List<Object> datapoint3 = new ArrayList<Object>();
+		datapoint3.add(timestamp);
+		datapoint3.add(moisture);
+		datapoint3.add(3); // quality
+		
+		List<Object> datapoints = new ArrayList<Object>();
+		datapoints.add(datapoint1);
+		datapoints.add(datapoint2);
+		datapoints.add(datapoint3);
+		
+		body.setDatapoints(datapoints);
+		com.ge.dsp.pm.ext.entity.util.map.Map map = new com.ge.dsp.pm.ext.entity.util.map.Map();
+		map.put("Lawn-Type", type); //$NON-NLS-2$
+
+		body.setAttributes(map);
+		return body;
+	}
 	@SuppressWarnings("javadoc")
 	protected Response handleResult(Object entity) {
 		ResponseBuilder responseBuilder = Response.status(Status.OK);

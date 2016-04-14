@@ -37,19 +37,11 @@ public class WeatherRestClient {
 	private static Logger log = LoggerFactory.getLogger(WeatherRestClient.class);
 	
 	
-	public static void main(String[] args) {
+	/*public static void main(String[] args) {
 		WeatherRestClient client = new WeatherRestClient();
 		String response = client.getWetherInformation("San%20Francisco");
 		JSONObject obj = new JSONObject(response);
-		/*String pageName = obj.getJSONObject("pageInfo").getString("pageName");
-
-		JSONArray arr = obj.getJSONArray("posts");
-		for (int i = 0; i < arr.length(); i++)
-		{
-		    String post_id = arr.getJSONObject(i).getString("post_id");
-		   
-		}*/
-	}
+			}*/
 
 	private String getURL(String city) {
 		StringBuilder builder = new StringBuilder();
